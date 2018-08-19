@@ -14,4 +14,8 @@
     NSLog(@"%s",__func__);
 }
 
++ (void)classMethod_sleep {
+    NSLog(@"%s",__func__);
+}
+
 @end

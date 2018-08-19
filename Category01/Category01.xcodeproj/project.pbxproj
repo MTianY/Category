@@ -34,6 +34,8 @@
 		4CA3E6E2212A27DC00CE1DFA /* TYPerson+eat.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "TYPerson+eat.m"; sourceTree = "<group>"; };
 		4CA3E6E4212A280900CE1DFA /* TYPerson+sleep.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "TYPerson+sleep.h"; sourceTree = "<group>"; };
 		4CA3E6E5212A280900CE1DFA /* TYPerson+sleep.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "TYPerson+sleep.m"; sourceTree = "<group>"; };
+		4CA3E6E7212A2DA000CE1DFA /* TYPerson+sleep.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "TYPerson+sleep.cpp"; sourceTree = "<group>"; };
+		4CA3E6E8212A2F7800CE1DFA /* TYPerson+eat.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "TYPerson+eat.cpp"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,8 +73,10 @@
 				4CA3E6DF212A27B400CE1DFA /* TYPerson.m */,
 				4CA3E6E1212A27DC00CE1DFA /* TYPerson+eat.h */,
 				4CA3E6E2212A27DC00CE1DFA /* TYPerson+eat.m */,
+				4CA3E6E8212A2F7800CE1DFA /* TYPerson+eat.cpp */,
 				4CA3E6E4212A280900CE1DFA /* TYPerson+sleep.h */,
 				4CA3E6E5212A280900CE1DFA /* TYPerson+sleep.m */,
+				4CA3E6E7212A2DA000CE1DFA /* TYPerson+sleep.cpp */,
 			);
 			path = Category01;
 			sourceTree = "<group>";

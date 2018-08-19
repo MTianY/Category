@@ -8,8 +8,14 @@
 
 #import "TYPerson.h"
 
-@interface TYPerson (sleep)
+@interface TYPerson (sleep) <
+NSCoding
+>
+
+@property (nonatomic, assign) int sleepPropertyOne;
 
 - (void)sleep;
+
++ (void)classMethod_sleep;
 
 @end
