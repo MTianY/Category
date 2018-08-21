@@ -18,4 +18,6 @@ NSCoding
 
 + (void)classMethod_sleep;
 
+- (void)test;
+
 @end

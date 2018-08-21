@@ -16,9 +16,11 @@ int main(int argc, const char * argv[]) {
         
         TYPerson *person = [[TYPerson alloc] init];
         
-        [person run];
-        [person eat];
-        [person sleep];
+//        [person run];
+//        [person eat];
+//        [person sleep];
+        
+        [person test];
         
     }
     return 0;

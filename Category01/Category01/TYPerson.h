@@ -11,5 +11,6 @@
 @interface TYPerson : NSObject
 
 - (void)run;
+- (void)test;
 
 @end

@@ -409,6 +409,83 @@ attachCategories(Class cls, category_list *cats, bool flush_caches)
 ```
 
 - 经过上面的操作,会将所有的 分类中的 `对象方法(类方法)`,`属性`,`协议`都`合并到类对象(元类对象)`中去.
+- 看上面的`attachLists`方法:
+
+```objc
+/**
+ * 参数一 addedLists : 分类的列表
+ * 参数二 addedCount : 分类的个数
+ */
+void attachLists(List* const * addedLists, uint32_t addedCount) {
+        if (addedCount == 0) return;
+
+        if (hasArray()) {
+            // many lists -> many lists
+            uint32_t oldCount = array()->count;
+            uint32_t newCount = oldCount + addedCount;
+            // 根据 newCount 重新分配内存(扩容)
+            setArray((array_t *)realloc(array(), array_t::byteSize(newCount)));
+            array()->count = newCount;
+            
+            // array()->lists 指的是原先类对象的信息列表
+            // 将原先类对象的信息列表,在内存中向后移动 addedCount 位
+            memmove(array()->lists + addedCount, array()->lists, 
+                    oldCount * sizeof(array()->lists[0]));
+                    
+            // 将分类的总信息列表 copy 到原先类的信息列表中.
+            memcpy(array()->lists, addedLists, 
+                   addedCount * sizeof(array()->lists[0]));
+        }
+        else if (!list  &&  addedCount == 1) {
+            // 0 lists -> 1 list
+            list = addedLists[0];
+        } 
+        else {
+            // 1 list -> many lists
+            List* oldList = list;
+            uint32_t oldCount = oldList ? 1 : 0;
+            uint32_t newCount = oldCount + addedCount;
+            setArray((array_t *)malloc(array_t::byteSize(newCount)));
+            array()->count = newCount;
+            if (oldList) array()->lists[addedCount] = oldList;
+            memcpy(array()->lists, addedLists, 
+                   addedCount * sizeof(array()->lists[0]));
+        }
+    }
+```
+    
+
+- 大致流程如下,以方法列表为例:
+    
+    ![](https://lh3.googleusercontent.com/7nGtj9ebKv9moCPbpzPI6C6vz2K2_yMLiSF9Ogn3Juvs4mWMYQZhovcS59uXaZDoMOaH4bnVo4iHYwu7SKO-aHHjgXNm81ToRSqK0FWIzAk7m_FVMF8yM_b54OBlnI88j7jgXhNaXWdYmFYXzrACROnQQxjgK65JC3MTSVX8jm8sDJL5yc79xjp2y2NKQ5pXweSHKrBjLf9BASe40YN8FtGmS4kAd32ylFVY6C5_x1WRWMR5Ci7yZOjEWoxrTB9m1utrWYdatCZB4lE81IhhelePW-Or4kQjYmUKabh7ywtqDiclhV1HRftA0ga6Li6l6xWsqr5kMn59sR39c0te536YFGg9PeOSfWdrrkOaisEFC4pKI8O62OC3eRB7lrSDPtAp0L8do2CB5AwGy1T2V8dKV0Jy98BgIQ_MCOi1CeZcVOzVcSUysgXWk7CEKnE8E2Wxs8R9sA7-cqW0FmKPt_btB429B_BWQzX2GpsxaTD_Bw3m50FQFoqkDnZwzqK_80oYO8EY-yZfPsaj7L49VODSBBMF2pqbGLFDrjl-AK6zeBo0Qke1yCouoflm89rVcCAmkqZyi3FWMsxnfHjXqDW7fghcdilqQUigGQ=w2400-h1170-no)
+    
+- 从上面也看出,`分类中方法会被优先调用.`
+    - 如上面的分类,每个中都有`test`方法.那么用`[person test]`会先执行谁的方法呢?
+
+    ```c
+    // 打印结果.这里是先执行 sleep 分类的 test 方法.
+    [TYPerson(sleep) test]
+    ```
+    
+    - 最后编译的分类,如果找到方法会优先调用.
+
+    ![](https://lh3.googleusercontent.com/i_6JFMLY2l6qsMx7VUq_rK-gOA23zuttjX2MaqCFoWGYXBGx94FelXPGVuyLf4dy4_2U4MhkEDcsH0n-Dd4i3qOWN9FqvoLDSNovU8YBU_ounOQXoJUNbxpPJ96RF2VlpO2-H9H_jdcCAlux0Ofv-L4MXOrQ6a0Fgr8mMWuwGx7qX34Ae6SA_TPHhdb2UWt5EKIWdC739AX-a0302PmJoGuKwwY7Jx6C5gFWJZqglXEH2J1f73oZPHF8IxIBkwFKwnQrcZ35gl7tcToOkYsETz72ekkhohRMrMRmchAgCbJhpFfRVjFRYrMuJeFiSxZ0cZqQ_IXqkekWvHBcSHh-r5z0MzzQ1rOBISnoSTwGyqw_5xZRug5Sla9OFSSmrjKZveO8mL2YL9QuYRxzQ6vLzibyV1TYDse3bmKacaOVCjEX3Eg7yKF7OYNxm0fikWuoJrq1sA9GpZ5jR1J8Ogswh2lGeHkI0rvcQ1PPgctGbPlm9W2qju2hELREupVqmzm235dh03ISH5tWKGQjm4ZhXHQi7tcpQx1cENLYRj7LG2C6X9qJTdJ3AZ9avZ5BuMbOJVGmYNBfN805_-0YSJpZUvXIeI9_wLd6UwozsA=w1292-h292-no)
+    
+- 那么分类和类扩展的区别是什么呢?
+    -  分类是在`运行时`,将数据合并到类信息中.
+    -  而类拓展是在`编译时`,它的数据就已经包含在类信息中了. 
+
+```objc
+
+// TYPerson.m 文件
+// 类拓展
+@interface TYPerson ()
+@end
+```
+
+
+
+     
 
 
 

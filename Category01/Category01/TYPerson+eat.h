@@ -11,5 +11,6 @@
 @interface TYPerson (eat)
 
 - (void)eat;
+- (void)test;
 
 @end

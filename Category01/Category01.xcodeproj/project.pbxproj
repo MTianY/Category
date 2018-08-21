@@ -138,8 +138,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				4CA3E6D8212A27A500CE1DFA /* main.m in Sources */,
-				4CA3E6E3212A27DC00CE1DFA /* TYPerson+eat.m in Sources */,
 				4CA3E6E0212A27B400CE1DFA /* TYPerson.m in Sources */,
+				4CA3E6E3212A27DC00CE1DFA /* TYPerson+eat.m in Sources */,
 				4CA3E6E6212A280900CE1DFA /* TYPerson+sleep.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
