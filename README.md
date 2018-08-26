@@ -483,9 +483,253 @@ void attachLists(List* const * addedLists, uint32_t addedCount) {
 @end
 ```
 
+## 四.分类能否添加成员变量?
 
+> 分类中不能`直接`添加成员变量.但是可以间接实现`有成员变量的效果.`
 
+### 1.类的属性
+
+`TYPerson`类,有个属性`@property (nonatomic, assign) int age;` 如:
+
+```objc
+@interface TYPerson : NSObject
+@property (nonatomic, assign) int age;
+@end
+```
+
+- 我们知道上面那样声明属性有如下几层意思:
+    - 它会自动生成一个 `_age` 成员变量.
+    - 会生成 `- (void)setAge:(int)age`方法的声明
+    - 会生成 `- (int)age` 方法的声明.
+    - 同时它还会生成 `setAge:`和`-(int)age`方法的实现:
+
+    ```objc
+    // .h 文件
+    #import <Foundation/Foundation.h>
+
+    @interface TYPerson : NSObject
+    
+    {
+        int _age;
+    }
+    
+    //@property (nonatomic, assign) int age;
+    
+    - (void)setAge:(int)age;
+    - (int)age;
+    
+    @end
+    
+    /**************/
+    // .m 文件
+    #import "TYPerson.h"
+
+    @implementation TYPerson
+    
+    - (void)setAge:(int)age {
+        _age = age;
+    
+    
+    }
+    
+    - (int)age {
+        return _age;
+    }
+    
+    @end
+    ``` 
+
+### 2.分类中添加属性
+
+在分类`TYPerson+Test1`中添加属性`@property (nonatomic, assign) int height;`.那么它只有如下一层意思:
+
+- 会自动生成`setHeight:`和`- (int)height;` 方法的`声明`
+- `不会生成带下划线的成员变量`
+- `不会生出方法的实现.`
+
+```objc
+#import "TYPerson.h"
+
+@interface TYPerson (Test1)
+
+//@property (nonatomic, assign) int height;
+
+- (void)setHeight:(int)height;
+- (int)height;
+
+@end
+```
+
+### 3. 分类中能否添加成员变量?
+
+分类中可以添加属性,但是其不会自动生成`带下划线的成员变量`.那么是否可以手动添加呢?
+
+- 答案是: `分类中也不能手动添加成员变量.`
+
+在分类中写入如下代码,编译器会报错:
+
+![](https://lh3.googleusercontent.com/5TT7BmQBthG_Nv1SCrghGvVFNgRakgd1Tr9Dd919lNYE2UuCNdZ4shYbwcqlHidAKHRJjpvfem6aB6Z7zoSofsCOmBzjGLTV_DpWRB7wszaPN167MvY7vMyhTe9i677mTJJyR4Vfo-SQDcaWd1hiZR0NmBHoZOwj4VO7wIryFa-zYt-ph2FCMr4Pse1ZIL4z0tWNRCUj-jRXjfr15k-nRtTmJP-XVeE93yRItc_VgIyLdH6fGV_2OkyzefZhyiUxLHR41IjA9ui5FfQiUtIBJEyteDEXPKNYYde9O7B083NCwJzgDil1c-R5l11qsopgqokJNWJrHLq-4E0KUTN69jGf0PmW4-Js7AyQHCiUB8VCwnOqyukbTKdUxdfmbxDevCoIV405U_CVVJYK0aFQtiGnKxHRyIPtiTiE889u-GlBkt2NOOpjq-CQpQQmPPaaf0KbsWyI0vRJzzyfqwShtFnlkAdUX7PX7ej6gW8uWuy5C9pfcFFKQli2S_eRdNQKbKDw69DGNx77kcp7DSVqB_6YqiRu5a69o3a7JV2K5kRqURuvoSe8F9s6Cuzpk39Rj8DvIaAGnZOd5h_5__3GQeOWUXm5Dl0l4tdRAUIvqaPjFj1Usm-mysVrPr-DAA=w966-h128-no)
+
+```objc
+#import "TYPerson.h"
+
+@interface TYPerson (Test1)
+
+{
+    // 此处编译器会报错: 
+    // Instance variables may not be placed in categories
+    int _height;
+}
+
+//@property (nonatomic, assign) int height;
+
+- (void)setHeight:(int)height;
+- (int)height;
+
+@end
+```
+
+**所以分类中不能直接添加成员变量.**
+
+## 五.间接实现让分类中看起来有成员变量的效果.
+
+### 1.分类中添加属性的用法?
+
+在分类中添加属性,那么我们如果希望同在类中添加属性的使用效果一样.如上面添加的两个属性,那么我们希望这么用:
+
+```objc
+TYPerson *person = [[TYPerson alloc] init];
+person.age = 10;
+person.height = 20;
+NSLog(@"%d",person.age);
+NSLog(@"%d",person.height);
+```
+
+- 如上,因为分类中没有成员变量,所以`set和get`方法都不能通过成员变量来赋值,那么上面的`person.height`就拿不到`20`这个值.
+
+### 2.间接实现分类中看起来有成员变量的方法.
+
+#### 2.1 第1种方法: 定义一个全局变量来存传进来的值. (Pass掉)
+
+先看分类中的代码结构:
+
+```objc
+// .h 文件
+#import "TYPerson.h"
+
+@interface TYPerson (Test1)
+@property (nonatomic, assign) int height;
+//- (void)setHeight:(int)height;
+//- (int)height;
+@end
+
+/***************/
+// .m 文件
+#import "TYPerson+Test1.h"
+@implementation TYPerson (Test1)
+
+- (void)setHeight:(int)height {
+    
+}
+
+- (int)height {
+    return 0;
+}
+@end
+```
+
+我们在`.m`文件中添加如下一个全局变量:`int heigth_test;`
+
+```objc
+#import "TYPerson+Test1.h"
+int height_test;
+
+@implementation TYPerson (Test1)
+
+- (void)setHeight:(int)height {
+    height_test = height;
+}
+
+- (int)height {
+    return height_test;
+}
+@end
+```
      
+那么再执行如下方法:
+
+```objc
+TYPerson *person = [[TYPerson alloc] init];
+person.age = 10;
+person.height = 20;
+ NSLog(@"age = %d\n height = %d",person.age, person.height);
+```
+
+得到打印结果:
+
+```c
+age = 10
+height = 20
+```
+
+如上看起来貌似是实现了有成员变量的功能.但是其还有`问题.`
+
+- 因为`int height_test`是个全局变量.那么当创建其他的 person 对象时,取出的 height 就都一样了.
+
+
+```objc
+person: age = 10 height = 40
+perspn2: age = 30 height = 40
+```
+
+**所以第1种方法不太完美. pass 掉**
+
+#### 2.2 第2种方法: 定义一个字典来通过 key 记录不同的值(pass 掉)
+
+上面的方法当有多个不同的对象时,满足不了.那么针对不同对象对应的不同的值,我们想到通过 key-value 的方式来实现.一个 key 对应一个 value. 那么我们创建一个字典.
+
+```objc
+#import "TYPerson+Test1.h"
+
+//int height_test;
+NSMutableDictionary *dict_test;
+
+@implementation TYPerson (Test1)
+
++ (void)load {
+    dict_test = [NSMutableDictionary dictionary];
+}
+
+- (void)setHeight:(int)height {
+    
+    // 方案1
+//    height_test = height;
+    
+    // 方案2
+    NSString *p = [[NSString alloc] initWithFormat:@"%p",self];
+    dict_test[p] = @(height);
+    
+}
+
+- (int)height {
+//    return height_test;
+    
+    NSString *p = [[NSString alloc] initWithFormat:@"%p",self];
+    return [dict_test[p] intValue];
+}
+
+@end
+```
+
+打印结果:
+
+```c
+person:  age = 10 height = 20
+perspn2: age = 30 height = 40
+```
+
+看起来是可以针对不同对象进行操作.
+
 
 
 
