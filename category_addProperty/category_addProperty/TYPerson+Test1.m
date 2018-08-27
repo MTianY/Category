@@ -10,11 +10,13 @@
 
 //int height_test;
 NSMutableDictionary *dict_test;
+NSMutableDictionary *name_dict;
 
 @implementation TYPerson (Test1)
 
 + (void)load {
     dict_test = [NSMutableDictionary dictionary];
+    name_dict = [NSMutableDictionary dictionary];
 }
 
 - (void)setHeight:(int)height {
@@ -33,6 +35,16 @@ NSMutableDictionary *dict_test;
     
     NSString *p = [[NSString alloc] initWithFormat:@"%p",self];
     return [dict_test[p] intValue];
+}
+
+- (void)setName:(NSString *)name {
+    NSString *p = [[NSString alloc] initWithFormat:@"%p",self];
+    name_dict[p] = name;
+}
+
+- (NSString *)name {
+    NSString *p = [[NSString alloc] initWithFormat:@"%p",self];
+    return name_dict[p];
 }
 
 @end

@@ -11,7 +11,7 @@
 @interface TYPerson (Test1)
 
 @property (nonatomic, assign) int height;
-
+@property (nonatomic, copy) NSString *name;
 //- (void)setHeight:(int)height;
 //- (int)height;
 

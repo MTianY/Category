@@ -10,6 +10,7 @@
 		4CA2768421323F76009F9332 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CA2768321323F76009F9332 /* main.m */; };
 		4CA2769121327929009F9332 /* TYPerson.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CA2769021327929009F9332 /* TYPerson.m */; };
 		4CA276942133562B009F9332 /* TYPerson+Test1.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CA276932133562B009F9332 /* TYPerson+Test1.m */; };
+		4CA276BC2134AD02009F9332 /* TYPerson+Test2.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CA276BB2134AD02009F9332 /* TYPerson+Test2.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -31,6 +32,8 @@
 		4CA2769021327929009F9332 /* TYPerson.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TYPerson.m; sourceTree = "<group>"; };
 		4CA276922133562B009F9332 /* TYPerson+Test1.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "TYPerson+Test1.h"; sourceTree = "<group>"; };
 		4CA276932133562B009F9332 /* TYPerson+Test1.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "TYPerson+Test1.m"; sourceTree = "<group>"; };
+		4CA276BA2134AD02009F9332 /* TYPerson+Test2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "TYPerson+Test2.h"; sourceTree = "<group>"; };
+		4CA276BB2134AD02009F9332 /* TYPerson+Test2.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "TYPerson+Test2.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,6 +71,8 @@
 				4CA2769021327929009F9332 /* TYPerson.m */,
 				4CA276922133562B009F9332 /* TYPerson+Test1.h */,
 				4CA276932133562B009F9332 /* TYPerson+Test1.m */,
+				4CA276BA2134AD02009F9332 /* TYPerson+Test2.h */,
+				4CA276BB2134AD02009F9332 /* TYPerson+Test2.m */,
 			);
 			path = category_addProperty;
 			sourceTree = "<group>";
@@ -128,6 +133,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4CA276BC2134AD02009F9332 /* TYPerson+Test2.m in Sources */,
 				4CA2768421323F76009F9332 /* main.m in Sources */,
 				4CA2769121327929009F9332 /* TYPerson.m in Sources */,
 				4CA276942133562B009F9332 /* TYPerson+Test1.m in Sources */,

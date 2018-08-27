@@ -728,8 +728,251 @@ person:  age = 10 height = 20
 perspn2: age = 30 height = 40
 ```
 
-看起来是可以针对不同对象进行操作.
+看起来是可以针对不同对象进行操作.但是这个方案还是存在一些问题的,如线程安全问题 .并且如果分类中新增一个属性的话,那么就要把上面的步骤都重新为新的属性写一遍.如增加一个`name`属性.那么要重新写遍如下方法,比较麻烦
 
+```objc
+NSMutableDictionary *name_dict;
 
++ (void)load {
+    dict_test = [NSMutableDictionary dictionary];
+    name_dict = [NSMutableDictionary dictionary];
+}
 
+- (void)setName:(NSString *)name {
+    NSString *p = [[NSString alloc] initWithFormat:@"%p",self];
+    name_dict[p] = name;
+}
+
+- (NSString *)name {
+    NSString *p = [[NSString alloc] initWithFormat:@"%p",self];
+    return name_dict[p];
+}
+```
+
+#### 2.3 第3种方法:利用`runtime API`关联对象属性.
+
+```objc
+#import "TYPerson+Test2.h"
+#import <objc/runtime.h>
+
+const void * TYNameKey;
+
+@implementation TYPerson (Test2)
+
+- (void)setCountry:(NSString *)country {
+    objc_setAssociatedObject(self, TYNameKey, country, OBJC_ASSOCIATION_COPY_NONATOMIC);
+}
+
+- (NSString *)country {
+    return objc_getAssociatedObject(self, TYNameKey);
+}
+
+@end
+```
+
+但是上面写法仍旧有问题.
+
+- `const void * TYNameKey` 的结果是0,相当于`NULL`.
+- 那么如果再有一个属性,也是这么定义的话,会出问题.
+- 如新增一个属性`no`.
+
+```objc
+#import "TYPerson+Test2.h"
+#import <objc/runtime.h>
+
+const void * TYNameKey;
+const void * TYNoKey;
+
+@implementation TYPerson (Test2)
+
+- (void)setCountry:(NSString *)country {
+    objc_setAssociatedObject(self, TYNameKey, country, OBJC_ASSOCIATION_COPY_NONATOMIC);
+}
+
+- (NSString *)country {
+    return objc_getAssociatedObject(self, TYNameKey);
+}
+
+- (void)setNo:(int)no {
+    objc_setAssociatedObject(self, TYNoKey, @(no), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+- (int)no {
+    return [objc_getAssociatedObject(self, TYNoKey) intValue];
+}
+
+@end
+```
+
+执行方法:
+
+```objc
+TYPerson *person = [[TYPerson alloc] init];
+person.country = @"China";
+person.no = 1000;
+NSLog(@"country = %@\n no = %d\n", person.country, person.no);
+```
+
+打印结果:
+
+```c
+country = 1000
+no = 1000
+```
+
+因为上面的 key 就是 NULL, 两个 key 都是 NULL, 所以当后来传进去的 no 的值后,再取值的时候,根据 key 取,都一样的.
+
+**改进办法,将每个 key 都赋一个独一无二的值**
+
+```objc
+#import "TYPerson+Test2.h"
+#import <objc/runtime.h>
+
+/**
+ * 这种写法的 key 相当于 NULL, 取值时会发生冲突
+ */
+//const void * TYNameKey;
+//const void * TYNoKey;
+
+/**
+ * 给每个 key 都赋一个唯一的值
+ * 这里将每个 key 的内存地址赋值给它
+ */
+const void * TYNameKey = &TYNameKey;
+const void * TYNoKey = &TYNoKey;
+
+@implementation TYPerson (Test2)
+
+- (void)setCountry:(NSString *)country {
+    objc_setAssociatedObject(self, TYNameKey, country, OBJC_ASSOCIATION_COPY_NONATOMIC);
+}
+
+- (NSString *)country {
+    return objc_getAssociatedObject(self, TYNameKey);
+}
+
+- (void)setNo:(int)no {
+    objc_setAssociatedObject(self, TYNoKey, @(no), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+- (int)no {
+    return [objc_getAssociatedObject(self, TYNoKey) intValue];
+}
+```
+
+再看打印结果:
+
+```c
+country = China
+no = 1000
+```
+
+#### 2.4 第4种方法:只传一个 char 类型的变量内存地址进去.
+
+上面2.3的写法还有一些问题.如`const void* TYNameKey`.这种写法在外面我们是可以拿到它的.
+
+```objc
+extern const void * TYNameKey;
+NSLog(@"%p",TYNameKey);
+```
+
+所以为了让这个 key 不暴露出去,我们要在前面加上一个 `static`.如下
+
+```objc
+static const void * TYNameKey = &TYNameKey;
+```
+
+因为 key 要求我们传一个地址值就可以了,所以我们也可以简化上面的写法,如`int p`.也可以,但是这里采用`char p`,一个字节,简化内存占用空间.而且也不需要给它赋值,直接传它的地址值进去`&TYNameKey`.
+
+```objc
+#import "TYPerson+Test2.h"
+#import <objc/runtime.h>
+
+static const char TYNameKey;
+static const char TYNoKey;
+
+/**
+ * 简化写法, char 占1个字节,空间小
+ * 而且不用给它赋值,我们只需要其内存地址而已
+ */
+static const char TYNameKey;
+static const char TYNoKey;
+
+@implementation TYPerson (Test2)
+
+- (void)setCountry:(NSString *)country {
+    // 传地址进来
+    objc_setAssociatedObject(self, &TYNameKey, country, OBJC_ASSOCIATION_COPY_NONATOMIC);
+}
+
+- (NSString *)country {
+    return objc_getAssociatedObject(self, &TYNameKey);
+}
+
+- (void)setNo:(int)no {
+    objc_setAssociatedObject(self, &TYNoKey, @(no), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+- (int)no {
+    return [objc_getAssociatedObject(self, &TYNoKey) intValue];
+}
+```
+
+#### 2.5 第5种方法: 直接传字符串,可读性高
+
+```objc
+#import "TYPerson+Test2.h"
+#import <objc/runtime.h>
+
+/**
+ * 直接传字符串,可读性高一些
+ */
+#define TYNameKey @"name"
+#define TYNoKey @"no"
+
+@implementation TYPerson (Test2)
+
+- (void)setCountry:(NSString *)country {
+    // TYNameKey 相当于 NSString *str = @"name"; 其实是相当于将@"name"的内存地址传进去
+    objc_setAssociatedObject(self, TYNameKey, country, OBJC_ASSOCIATION_COPY_NONATOMIC);
+}
+
+- (NSString *)country {
+    return objc_getAssociatedObject(self, TYNameKey);
+}
+
+- (void)setNo:(int)no {
+    objc_setAssociatedObject(self, TYNoKey, @(no), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+- (int)no {
+    return [objc_getAssociatedObject(self, TYNoKey) intValue];
+}
+```
+    
+#### 2.6 第6种方法: 传 SEL 地址
+
+- 这么写有提示,而且 set 和 get 方法如果写的不同,会有警告
+
+```objc
+@implementation TYPerson (Test2)
+
+- (void)setCountry:(NSString *)country {
+    objc_setAssociatedObject(self, @selector(country), country, OBJC_ASSOCIATION_COPY_NONATOMIC);
+}
+
+- (NSString *)country {
+    return objc_getAssociatedObject(self, @selector(country));
+}
+
+- (void)setNo:(int)no {
+    objc_setAssociatedObject(self, @selector(no), @(no), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+- (int)no {
+    return [objc_getAssociatedObject(self, @selector(no)) intValue];
+}
+
+@end
+```
 
