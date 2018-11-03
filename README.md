@@ -976,3 +976,44 @@ static const char TYNoKey;
 @end
 ```
 
+### 关联对象实现原理
+
+```objc
+/**
+* 参数1: 给哪一个对象添加关联对象, 这里是给当前对象,传 self
+* 参数2: 存值取值的一个 key
+* 参数3: 关联什么值,这里关联 name
+* 参数4: 关联策略, 将来保存这个值使用哪个策略,什么内存管理方式来管理它
+*/
+objc_setAssociatedObject(id object, const void* key, id value, objc_AssociationPolicy policy)
+```
+
+实现关联对象技术的核心对象有:
+
+- `AssociationsManager`
+- `AssociationsHashMap`
+- `ObjectAssociationMap`
+- `ObjcAssocaition`
+
+查找过程
+
+1. `AssociationsManager` 内部有个 `AssociationsHashMap`.
+
+2. `AssociationsHashMap` 中通过 key 找到 `ObjectAssociationMap`.(key 指的就是上面方法中的 `id object`, 即 `self,第一个参数`,这里是拿到它的内存地址做 key)
+
+3. `AssociationsMap` : `ObjectAssociationMap` 中通过 key(这里的 key 就是上面方法的第2个参数.)又找到 `ObjcAssociation`.而`ObjcAssociation`中又存着如下内容
+
+```C++
+class ObjcAssociation {
+    uintptr_t _policy;  // 策略
+    id _value;          // value
+    ....
+}
+```
+
+- 第一个参数作为 key, 通过 HashMap 找到`ObjectAssociationMap`,然后第二参数作为 key 找到 `ObjectAssociation`.然后这里面存着 value 和 policy(策略)
+- 关联对象并不是存储在被关联对象本身内存中的
+- 关联对象存储在全局的统一的一个 `AssociationsManager` 中
+- 设置关联对象为 nil, 相当于移除关联对象.(把第2层那里置为 nil, 下面的也都没有了)
+- 被关联的对象释放的话,那么关联对象也会被自动移除.
+
